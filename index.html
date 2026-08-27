@@ -3,32 +3,29 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Market Clock (transparent)</title>
+  <title>Market Clock</title>
   <style>
-    /* Kein Hintergrund: transparent für Notion-Embed */
     html, body { height: 100%; margin: 0; background: transparent; }
+    * { box-sizing: border-box; }
 
     :root{
-      --panel: rgba(255,255,255,.06);
-      --border: rgba(255,255,255,.14);
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.62);
+      --text: rgba(15, 23, 42, .92);     /* dunkel (für weißen Embed) */
+      --muted: rgba(15, 23, 42, .55);
+      --panel: rgba(255,255,255,.72);    /* leichtes Panel */
+      --border: rgba(15, 23, 42, .12);
     }
-
-    *{ box-sizing:border-box; }
 
     body{
       display:grid;
       place-items:center;
-      color: var(--text);
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color: var(--text);
     }
 
     .widget{
       width: min(720px, 96vw);
-      border-radius: 16px;
-      padding: 12px;
-      background: transparent; /* wichtig */
+      padding: 10px;
+      background: transparent;
     }
 
     .grid{
@@ -43,7 +40,7 @@
       border: 1px solid var(--border);
       background: var(--panel);
       backdrop-filter: blur(10px);
-      min-height: 78px;
+      -webkit-backdrop-filter: blur(10px);
     }
 
     .city{
@@ -74,7 +71,6 @@
   </div>
 
   <script>
-    // Nur die gewünschten Städte (Fixe Zeitzonen)
     const CLOCKS = [
       { label: "New York", tz: "America/New_York" },
       { label: "London",   tz: "Europe/London" },
@@ -83,7 +79,7 @@
     ];
 
     const SHOW_SECONDS = true;
-    const LOCALE_TIME = "de-DE"; // nur Format, nicht Zeitzone
+    const LOCALE_TIME = "de-DE";
 
     const grid = document.getElementById("grid");
 

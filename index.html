@@ -1,13 +1,14 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Clock Widget</title>
-  <style>
- :root{
-  --text: #ffffff;        /* Reiner Weißton für Dark Mode */
-  --muted: #cccccc;       /* Hellgrau für Datum & TZ */
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>World Clock Widget</title>
+
+<style>
+:root{
+  --text: #ffffff;
+  --muted: #cccccc;
 }
 
 *{ box-sizing:border-box; }
@@ -26,7 +27,6 @@ body{
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
 }
 
-/* Widget komplett transparent */
 .widget{
   width: min(520px, 92vw);
   padding: 0;
@@ -36,95 +36,81 @@ body{
   backdrop-filter: none !important;
 }
 
-/* Uhr */
-.time{
+.zone{
   text-align:center;
+  margin-bottom: 18px;
+}
+
+.city{
+  font-size: 18px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.time{
   font-variant-numeric: tabular-nums;
   letter-spacing: .08em;
   line-height: 1.0;
-  font-weight: 720;
-  font-size: clamp(56px, 10vw, 96px);
+  font-weight: 700;
+  font-size: clamp(40px, 8vw, 70px);
   color: var(--text);
 }
-
-/* Datum + Zeitzone */
-.row{
-  margin-top: 10px;
-  display:flex;
-  justify-content: space-between;
-  gap: 10px;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-/* Pills komplett transparent */
-.pill{
-  padding: 7px 10px;
-  border-radius: 1px;
-  border: none !important;
-  background: transparent !important;
-  white-space: nowrap;
-  overflow:hidden;
-  text-overflow: ellipsis;
-  max-width: 70%;
-  color: var(--muted);
-}
-
-.pill.accent{
-  border: none !important;
-  background: transparent !important;
-}
-
-  </style>
+</style>
 </head>
 
 <body>
-  <div class="widget" role="group" aria-label="Trading Uhr">
-    <div class="time" id="time">00:00</div>
+<div class="widget">
 
-    <div class="row">
-      <div class="pill accent" id="date">—</div>
-      <div class="pill" id="tz">—</div>
-    </div>
+  <div class="zone">
+    <div class="city">New York</div>
+    <div class="time" id="ny">00:00:00</div>
   </div>
 
-  <script>
-    // Einstellungen (minimalistisch):
-    const SHOW_SECONDS = true;   // false => HH:MM
-    const SHOW_DATE    = true;   // false => Datum ausblenden
-    const LOCALE       = "de-DE";
+  <div class="zone">
+    <div class="city">Berlin</div>
+    <div class="time" id="berlin">00:00:00</div>
+  </div>
 
-    const timeEl = document.getElementById("time");
-    const dateEl = document.getElementById("date");
-    const tzEl   = document.getElementById("tz");
+  <div class="zone">
+    <div class="city">London</div>
+    <div class="time" id="london">00:00:00</div>
+  </div>
 
-    function pad(n){ return String(n).padStart(2,"0"); }
+  <div class="zone">
+    <div class="city">Tokio</div>
+    <div class="time" id="tokyo">00:00:00</div>
+  </div>
 
-    function render(){
-      const now = new Date();
-      const hh = pad(now.getHours());
-      const mm = pad(now.getMinutes());
-      const ss = pad(now.getSeconds());
+</div>
 
-      timeEl.textContent = SHOW_SECONDS ? `${hh}:${mm}:${ss}` : `${hh}:${mm}`;
+<script>
+function pad(n){ return String(n).padStart(2,"0"); }
 
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Local";
-      tzEl.textContent = tz;
+function render(){
+  const zones = {
+    ny:    "America/New_York",
+    berlin:"Europe/Berlin",
+    london:"Europe/London",
+    tokyo: "Asia/Tokyo"
+  };
 
-      if (SHOW_DATE){
-        const df = new Intl.DateTimeFormat(LOCALE, {
-          weekday: "short", day: "2-digit", month: "2-digit", year: "numeric"
-        });
-        dateEl.textContent = df.format(now);
-        dateEl.style.display = "";
-      } else {
-        dateEl.style.display = "none";
-      }
-    }
+  for (const id in zones){
+    const now = new Date();
+    const fmt = new Intl.DateTimeFormat("de-DE", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+      timeZone: zones[id]
+    });
 
-    render();
-    // Update “weich” aber stabil:
-    setInterval(render, 250);
-  </script>
+    document.getElementById(id).textContent = fmt.format(now);
+  }
+}
+
+render();
+setInterval(render, 250);
+</script>
+
 </body>
 </html>

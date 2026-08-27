@@ -6,56 +6,67 @@
   <title>Clock Widget</title>
   <style>
     :root{
-      --bg: #2f3437;
-      --panel: rgba(255,255,255,.06);
-      --border: rgba(255,255,255,.14);
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.60);
-      --accent: #2f3437;
-    }
+  --text: rgba(255,255,255,.92);
+  --muted: rgba(255,255,255,.60);
+}
 
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; margin:0; }
+*{ box-sizing:border-box; }
+html,body{
+  height:100%;
+  margin:0;
+  background: transparent !important;
+}
 
-    body{
-      display:grid;
-      place-items:center;
-      background: transparent;
-      color: var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-    }
+body{
+  display:grid;
+  place-items:center;
+  background: transparent !important;
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+}
 
-    .time{
-      text-align:center;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: .08em;
-      line-height: 1.0;
-      font-weight: 720;
-      font-size: clamp(56px, 10vw, 96px);
-    }
+.widget{
+  width: min(520px, 92vw);
+  padding: 0;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
 
-    .row{
-      margin-top: 10px;
-      display:flex;
-      justify-content: space-between;
-      gap: 10px;
-      color: var(--muted);
-      font-size: 13px;
-    }
+.time{
+  text-align:center;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .08em;
+  line-height: 1.0;
+  font-weight: 720;
+  font-size: clamp(56px, 10vw, 96px);
+}
 
-    .pill{
-      padding: 7px 10px;
-      border-radius: 1px;
-      border: 1px solid rgba(255,255,255,.1);
-      background: rgba(0,0,0,.1);
-      white-space: nowrap;
-      overflow:hidden;
-      text-overflow: ellipsis;
-      max-width: 70%;
-    }
+.row{
+  margin-top: 10px;
+  display:flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
 
-    .pill.accent{
-      border-color: rgba(124,92,255,.25);
+.pill{
+  padding: 7px 10px;
+  border-radius: 1px;
+  border: none !important;
+  background: transparent !important;
+  white-space: nowrap;
+  overflow:hidden;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
+
+.pill.accent{
+  border: none !important;
+}
+
     }
   </style>
 </head>

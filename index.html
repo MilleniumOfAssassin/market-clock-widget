@@ -3,154 +3,121 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Market Clock</title>
+  <title>Clock Widget</title>
   <style>
     :root{
-      --bg: #9d9fa1;
+      --bg: #0b0f1a;
       --panel: rgba(255,255,255,.06);
       --border: rgba(255,255,255,.14);
       --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.62);
+      --muted: rgba(255,255,255,.60);
+      --accent: #7c5cff;
     }
+
     *{ box-sizing:border-box; }
     html,body{ height:100%; margin:0; }
+
     body{
       display:grid;
       place-items:center;
-      background:
-        radial-gradient(700px 500px at 25% 20%, rgba(124,92,255,.16), transparent 55%),
-        radial-gradient(700px 500px at 80% 30%, rgba(0,220,255,.10), transparent 55%),
-        var(--bg);
+      background: radial-gradient(700px 500px at 25% 20%, rgba(124,92,255,.18), transparent 55%),
+                  radial-gradient(700px 500px at 80% 30%, rgba(0,220,255,.10), transparent 55%),
+                  var(--bg);
       color: var(--text);
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
     }
+
     .widget{
-      width: min(720px, 96vw);
+      width: min(520px, 92vw);
       border-radius: 18px;
-      padding: 16px;
+      padding: 18px 18px 14px;
       background: var(--panel);
       border: 1px solid var(--border);
       backdrop-filter: blur(12px);
       box-shadow: 0 18px 55px rgba(0,0,0,.45);
     }
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-    }
-    .card{
-      border-radius: 14px;
-      padding: 12px 12px 10px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.14);
-      min-height: 88px;
-    }
-    .city{
-      font-size: 12px;
+
+    .time{
+      text-align:center;
+      font-variant-numeric: tabular-nums;
       letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--muted);
+      line-height: 1.0;
+      font-weight: 720;
+      font-size: clamp(56px, 10vw, 96px);
+    }
+
+    .row{
+      margin-top: 10px;
       display:flex;
       justify-content: space-between;
-      gap: 8px;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
     }
-    .tz{
-      opacity: .85;
+
+    .pill{
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.12);
       white-space: nowrap;
       overflow:hidden;
       text-overflow: ellipsis;
-      max-width: 60%;
-      text-align:right;
-    }
-    .time{
-      margin-top: 8px;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: .06em;
-      font-weight: 750;
-      font-size: clamp(22px, 3.2vw, 34px);
-      line-height: 1.05;
-    }
-    .date{
-      margin-top: 6px;
-      font-size: 12px;
-      color: var(--muted);
+      max-width: 70%;
     }
 
-    /* Notion embed ist oft schmal -> automatisch auf 2 Spalten umstellen */
-    @media (max-width: 620px){
-      .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pill.accent{
+      border-color: rgba(124,92,255,.25);
     }
   </style>
 </head>
+
 <body>
-  <div class="widget" role="group" aria-label="Trading Zeitzonen Uhr">
-    <div class="grid" id="grid"></div>
+  <div class="widget" role="group" aria-label="Trading Uhr">
+    <div class="time" id="time">00:00</div>
+
+    <div class="row">
+      <div class="pill accent" id="date">—</div>
+      <div class="pill" id="tz">—</div>
+    </div>
   </div>
 
   <script>
-    // Fixe Zeitzonen (unabhängig von deinem System)
-    const CLOCKS = [
-      { label: "Berlin"},
-      { label: "New York"},
-      { label: "London"},
-      { label: "Tokio"},
-    ];
+    // Einstellungen (minimalistisch):
+    const SHOW_SECONDS = true;   // false => HH:MM
+    const SHOW_DATE    = true;   // false => Datum ausblenden
+    const LOCALE       = "de-DE";
 
-    // Anzeige-Optionen
-    const SHOW_SECONDS = true;     // true => HH:MM:SS
-    const LOCALE_TIME  = "de-DE";  // reine Formatierung (Ziffern/Trennzeichen)
-    const LOCALE_DATE  = "de-DE";
+    const timeEl = document.getElementById("time");
+    const dateEl = document.getElementById("date");
+    const tzEl   = document.getElementById("tz");
 
-    const grid = document.getElementById("grid");
-
-    function makeCard({label, tz}){
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <div class="city">
-          <span>${label}</span>
-          <span class="tz">${tz}</span>
-        </div>
-        <div class="time" data-tz="${tz}">--:--</div>
-        <div class="date" data-date-tz="${tz}">—</div>
-      `;
-      return card;
-    }
-
-    CLOCKS.forEach(c => grid.appendChild(makeCard(c)));
-
-    function fmtTime(tz){
-      const opt = {
-        timeZone: tz,
-        hour: "2-digit",
-        minute: "2-digit",
-        ...(SHOW_SECONDS ? { second: "2-digit" } : {}),
-        hour12: false
-      };
-      return new Intl.DateTimeFormat(LOCALE_TIME, opt).format(new Date());
-    }
-
-    function fmtDate(tz){
-      const opt = {
-        timeZone: tz,
-        weekday: "short",
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
-      };
-      return new Intl.DateTimeFormat(LOCALE_DATE, opt).format(new Date());
-    }
+    function pad(n){ return String(n).padStart(2,"0"); }
 
     function render(){
-      document.querySelectorAll(".time[data-tz]").forEach(el => {
-        el.textContent = fmtTime(el.getAttribute("data-tz"));
-      });
-      document.querySelectorAll(".date[data-date-tz]").forEach(el => {
-        el.textContent = fmtDate(el.getAttribute("data-date-tz"));
-      });
+      const now = new Date();
+      const hh = pad(now.getHours());
+      const mm = pad(now.getMinutes());
+      const ss = pad(now.getSeconds());
+
+      timeEl.textContent = SHOW_SECONDS ? `${hh}:${mm}:${ss}` : `${hh}:${mm}`;
+
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Local";
+      tzEl.textContent = tz;
+
+      if (SHOW_DATE){
+        const df = new Intl.DateTimeFormat(LOCALE, {
+          weekday: "short", day: "2-digit", month: "2-digit", year: "numeric"
+        });
+        dateEl.textContent = df.format(now);
+        dateEl.style.display = "";
+      } else {
+        dateEl.style.display = "none";
+      }
     }
 
     render();
+    // Update “weich” aber stabil:
     setInterval(render, 250);
   </script>
 </body>

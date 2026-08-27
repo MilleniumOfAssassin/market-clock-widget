@@ -1,113 +1,369 @@
 <!doctype html>
 <html lang="de">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>World Clock Widget</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Market Clock Widget</title>
 
-<style>
-:root{
-  --text: #ffffff;
-  --muted: #cccccc;
-}
+  <!-- Luxon für Zeitzonen/DST -->
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
 
-*{ box-sizing:border-box; }
+  <style>
+    :root{
+      --bg: #0b1220;
+      --card: rgba(255,255,255,0.06);
+      --card2: rgba(255,255,255,0.09);
+      --text: #e9eefc;
+      --muted: rgba(233,238,252,0.70);
+      --open: #2ee59d;
+      --closed: #ff5c7a;
+      --accent: #7aa7ff;
+      --border: rgba(255,255,255,0.10);
+    }
+    * { box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      background: radial-gradient(1200px 700px at 20% 0%, rgba(122,167,255,0.30), transparent 60%),
+                  radial-gradient(1000px 600px at 90% 10%, rgba(46,229,157,0.20), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 20px;
+    }
 
-html, body{
-  height:100%;
-  margin:0;
-  background: transparent !important;
-}
+    .widget{
+      width: min(980px, 100%);
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.20);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 18px;
+    }
 
-body{
-  display:grid;
-  place-items:center;
-  background: transparent !important;
-  color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-}
+    header{
+      display:flex;
+      gap: 12px;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
 
-.widget{
-  width: min(520px, 92vw);
-  padding: 0;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-}
+    h1{
+      font-size: 16px;
+      letter-spacing: 0.2px;
+      margin:0;
+      color: var(--text);
+      font-weight: 650;
+    }
+    .sub{
+      margin:0;
+      font-size: 12px;
+      color: var(--muted);
+    }
 
-.zone{
-  text-align:center;
-  margin-bottom: 18px;
-}
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+    }
+    @media (max-width: 520px){
+      .grid{ grid-template-columns: 1fr; }
+    }
 
-.city{
-  font-size: 18px;
-  color: var(--muted);
-  margin-bottom: 4px;
-}
+    .card{
+      background: linear-gradient(180deg, var(--card), rgba(255,255,255,0.03));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+    }
+    .top{
+      display:flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .name{
+      display:flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .name b{
+      font-size: 14px;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .name span{
+      font-size: 12px;
+      color: var(--muted);
+    }
 
-.time{
-  font-variant-numeric: tabular-nums;
-  letter-spacing: .08em;
-  line-height: 1.0;
-  font-weight: 700;
-  font-size: clamp(40px, 8vw, 70px);
-  color: var(--text);
-}
-</style>
+    .badge{
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--card2);
+      white-space: nowrap;
+      display:flex;
+      align-items:center;
+      gap: 8px;
+    }
+    .dot{
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display:inline-block;
+      background: var(--closed);
+      box-shadow: 0 0 0 4px rgba(255,92,122,0.12);
+    }
+    .open .dot{
+      background: var(--open);
+      box-shadow: 0 0 0 4px rgba(46,229,157,0.14);
+    }
+
+    .time{
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      margin: 2px 0 10px;
+    }
+
+    .row{
+      display:flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      margin: 6px 0;
+    }
+    .row strong{
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    .footer{
+      margin-top: 12px;
+      display:flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    a{ color: var(--accent); text-decoration: none; }
+    a:hover{ text-decoration: underline; }
+    code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 11px;
+      color: rgba(233,238,252,0.85);
+    }
+  </style>
 </head>
 
 <body>
-<div class="widget">
+  <main class="widget" role="application" aria-label="Market Clock Widget">
+    <header>
+      <div>
+        <h1>Market Clock</h1>
+        <p class="sub">NYSE · LSE · JPX · XETRA — lokale Zeit + Timer bis Open/Close</p>
+      </div>
+      <p class="sub" id="nowLocal"></p>
+    </header>
 
-  <div class="zone">
-    <div class="city">New York</div>
-    <div class="time" id="ny">00:00:00</div>
-  </div>
+    <section class="grid" id="grid"></section>
 
-  <div class="zone">
-    <div class="city">Berlin</div>
-    <div class="time" id="berlin">00:00:00</div>
-  </div>
-
-  <div class="zone">
-    <div class="city">London</div>
-    <div class="time" id="london">00:00:00</div>
-  </div>
-
-  <div class="zone">
-    <div class="city">Tokio</div>
-    <div class="time" id="tokyo">00:00:00</div>
-  </div>
-
-</div>
+    <div class="footer">
+      <span>
+        DST/Zeitzonen via <a href="https://moment.github.io/luxon/#/" target="_blank" rel="noreferrer">Luxon</a>.
+        Handelszeiten sind Standard-Sessions (ohne Feiertage/verkürzte Tage).
+      </span>
+      <span>Embed: <code>&lt;iframe src=".../index.html" style="width:100%;height:320px;border:0"&gt;&lt;/iframe&gt;</code></span>
+    </div>
+  </main>
 
 <script>
-function render(){
-  const zones = {
-    ny:    "America/New_York",
-    berlin:"Europe/Berlin",
-    london:"Europe/London",
-    tokyo: "Asia/Tokyo"
-  };
+(() => {
+  const { DateTime, Interval } = luxon;
 
-  for (const id in zones){
-    const now = new Date();
-    const fmt = new Intl.DateTimeFormat("de-DE", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-      timeZone: zones[id]
-    });
+  // Konfiguration: Zeitzone + reguläre Handelszeiten (lokale Börsenzeit)
+  // Hinweise:
+  // - NYSE: 09:30–16:00 America/New_York
+  // - LSE: 08:00–16:30 Europe/London
+  // - JPX (TSE): 09:00–15:00 Asia/Tokyo (vereinfachte Session; Mittagspause ignoriert)
+  // - XETRA: 09:00–17:30 Europe/Berlin
+  const MARKETS = [
+    { key: "NYSE", name: "NYSE", tz: "America/New_York", open: "09:30", close: "16:00" },
+    { key: "LSE",  name: "LSE",  tz: "Europe/London",   open: "08:00", close: "16:30" },
+    { key: "JPX",  name: "JPX",  tz: "Asia/Tokyo",      open: "09:00", close: "15:00" },
+    { key: "XETRA",name: "XETRA",tz: "Europe/Berlin",   open: "09:00", close: "17:30" },
+  ];
 
-    document.getElementById(id).textContent = fmt.format(now);
+  const grid = document.getElementById("grid");
+  const nowLocalEl = document.getElementById("nowLocal");
+
+  function parseHM(hm){
+    const [h,m] = hm.split(":").map(Number);
+    return { h, m };
   }
-}
 
-render();
-setInterval(render, 250);
+  function formatDuration(ms){
+    if (ms < 0) ms = 0;
+    const total = Math.floor(ms / 1000);
+    const hh = String(Math.floor(total / 3600)).padStart(2,"0");
+    const mm = String(Math.floor((total % 3600) / 60)).padStart(2,"0");
+    const ss = String(total % 60).padStart(2,"0");
+    return `${hh}:${mm}:${ss}`;
+  }
+
+  function isWeekday(dt){
+    // Luxon: 1=Mon ... 7=Sun
+    return dt.weekday >= 1 && dt.weekday <= 5;
+  }
+
+  function sessionForDate(market, dtInMarketTz){
+    const { h: oh, m: om } = parseHM(market.open);
+    const { h: ch, m: cm } = parseHM(market.close);
+
+    const openDT  = dtInMarketTz.set({ hour: oh, minute: om, second: 0, millisecond: 0 });
+    const closeDT = dtInMarketTz.set({ hour: ch, minute: cm, second: 0, millisecond: 0 });
+
+    return { openDT, closeDT, interval: Interval.fromDateTimes(openDT, closeDT) };
+  }
+
+  function nextWeekday(dt){
+    let d = dt;
+    do { d = d.plus({ days: 1 }).startOf("day"); } while (!isWeekday(d));
+    return d;
+  }
+
+  function computeMarketState(market){
+    const nowMarket = DateTime.now().setZone(market.tz);
+    const todaySession = sessionForDate(market, nowMarket);
+
+    // Wochenende: nächster Open am nächsten Werktag
+    if (!isWeekday(nowMarket)) {
+      const nextDay = nextWeekday(nowMarket);
+      const nextSess = sessionForDate(market, nextDay);
+      return {
+        nowMarket,
+        status: "CLOSED",
+        nextLabel: "Opens in",
+        nextMs: nextSess.openDT.toMillis() - nowMarket.toMillis(),
+        sessionOpen: nextSess.openDT,
+        sessionClose: nextSess.closeDT,
+        sessionIsToday: false
+      };
+    }
+
+    // Vor Open (Werktag)
+    if (nowMarket < todaySession.openDT) {
+      return {
+        nowMarket,
+        status: "CLOSED",
+        nextLabel: "Opens in",
+        nextMs: todaySession.openDT.toMillis() - nowMarket.toMillis(),
+        sessionOpen: todaySession.openDT,
+        sessionClose: todaySession.closeDT,
+        sessionIsToday: true
+      };
+    }
+
+    // Während Session
+    if (todaySession.interval.contains(nowMarket)) {
+      return {
+        nowMarket,
+        status: "OPEN",
+        nextLabel: "Closes in",
+        nextMs: todaySession.closeDT.toMillis() - nowMarket.toMillis(),
+        sessionOpen: todaySession.openDT,
+        sessionClose: todaySession.closeDT,
+        sessionIsToday: true
+      };
+    }
+
+    // Nach Close => nächster Werktag
+    const nextDay = nextWeekday(nowMarket);
+    const nextSess = sessionForDate(market, nextDay);
+    return {
+      nowMarket,
+      status: "CLOSED",
+      nextLabel: "Opens in",
+      nextMs: nextSess.openDT.toMillis() - nowMarket.toMillis(),
+      sessionOpen: nextSess.openDT,
+      sessionClose: nextSess.closeDT,
+      sessionIsToday: false
+    };
+  }
+
+  function render(){
+    const localNow = DateTime.now();
+    nowLocalEl.textContent = `Local: ${localNow.toFormat("ccc dd LLL yyyy · HH:mm:ss")}`;
+
+    grid.innerHTML = "";
+
+    for (const m of MARKETS){
+      const s = computeMarketState(m);
+
+      const card = document.createElement("div");
+      card.className = "card " + (s.status === "OPEN" ? "open" : "");
+
+      const timeStr = s.nowMarket.toFormat("HH:mm:ss");
+      const openStr = s.sessionOpen.toFormat("ccc HH:mm");
+      const closeStr = s.sessionClose.toFormat("ccc HH:mm");
+
+      card.innerHTML = `
+        <div class="top">
+          <div class="name">
+            <b>${m.name}</b>
+            <span>${m.tz}</span>
+          </div>
+          <div class="badge">
+            <span class="dot" aria-hidden="true"></span>
+            <span>${s.status}</span>
+          </div>
+        </div>
+
+        <div class="time">${timeStr}</div>
+
+        <div class="row">
+          <span>Session</span>
+          <strong>${m.open}–${m.close}</strong>
+        </div>
+
+        <div class="row">
+          <span>${s.nextLabel}</span>
+          <strong>${formatDuration(s.nextMs)}</strong>
+        </div>
+
+        <div class="row">
+          <span>Next open</span>
+          <strong>${openStr}</strong>
+        </div>
+
+        <div class="row">
+          <span>Next close</span>
+          <strong>${closeStr}</strong>
+        </div>
+      `;
+
+      grid.appendChild(card);
+    }
+  }
+
+  render();
+  setInterval(render, 1000);
+})();
 </script>
 
 </body>
